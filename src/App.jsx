@@ -7,13 +7,13 @@ const C = {
   text: "#f0f0f0", muted: "#666",
 };
 const font = "'Segoe UI', Tahoma, sans-serif";
-const SCREENS = { SETUP: "setup", LOGIN: "login", HOME: "home", WORKOUT: "workout", HISTORY: "history" };
+const SCREENS = { LOGIN: "login", HOME: "home", WORKOUT: "workout", HISTORY: "history" };
 
-// ─── Local Storage ───────────────────────────────────────────
-const LS = {
-  get: (k) => { try { return localStorage.getItem(k); } catch { return null; } },
-  set: (k, v) => { try { localStorage.setItem(k, v); } catch {} },
-};
+// ─── הכנס כאן את ה-URL שלך — פעם אחת לנצח ───────────────────
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzUqUuBrf6fqDWeNXIOiELm9f92eLW26ZeawOShed1Qr61oH6NnvzMW-r3FVaImZ4oCyw/exec";
+//                  ↑ החלף את זה ב-URL האמיתי שלך
+
+
 
 // ─── Google Sheets API ───────────────────────────────────────
 async function sheetGet(url, params) {
@@ -83,13 +83,9 @@ function Inp({ value, onChange, placeholder, type = "text", style = {}, onKeyDow
 
 // ─── App ─────────────────────────────────────────────────────
 export default function App() {
-  const [screen, setScreen] = useState(SCREENS.SETUP);
-  const [scriptUrl, setScriptUrl] = useState("");
-  const [urlInput, setUrlInput] = useState("");
-  const [urlError, setUrlError] = useState("");
-  const [equipment, setEquipment] = useState([]);
-  const [urlTesting, setUrlTesting] = useState(false);
+  const [screen, setScreen] = useState(SCREENS.LOGIN);
   const [users, setUsers] = useState([]);
+  const [equipment, setEquipment] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
   const [userHistory, setUserHistory] = useState([]);
   const [newName, setNewName] = useState("");
@@ -104,48 +100,22 @@ export default function App() {
   const [saving, setSaving] = useState(false);
   const chatRef = useRef(null);
 
-  // Load saved config on mount
   useEffect(() => {
-    const savedUrl = LS.get("gym_script_url");
-    if (savedUrl) {
-      setScriptUrl(savedUrl);
-      fetchUsers(savedUrl).then(() => setScreen(SCREENS.LOGIN));
-      sheetGet(savedUrl, { action: "getEquipment" }).then(d => { if (d.ok) setEquipment(d.equipment || []); }).catch(() => {});
-    }
+    sheetGet(SCRIPT_URL, { action: "getUsers" }).then(d => { if (d.ok) setUsers(d.users || []); }).catch(() => {});
+    sheetGet(SCRIPT_URL, { action: "getEquipment" }).then(d => { if (d.ok) setEquipment(d.equipment || []); }).catch(() => {});
   }, []);
 
   useEffect(() => {
     if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight;
   }, [messages, loading]);
 
-  const fetchUsers = async (url) => {
-    try {
-      const d = await sheetGet(url, { action: "getUsers" });
-      if (d.ok) setUsers(d.users || []);
-    } catch {}
-  };
-
-  const testAndSave = async () => {
-    const url = urlInput.trim();
-    if (!url) { setUrlError("הכנס URL."); return; }
-    setUrlTesting(true); setUrlError("");
-    try {
-      const d = await sheetGet(url, { action: "getUsers" });
-      if (d.ok) {
-        setScriptUrl(url); LS.set("gym_script_url", url);
-        setUsers(d.users || []);
-        const eq = await sheetGet(url, { action: "getEquipment" });
-        if (eq.ok) setEquipment(eq.equipment || []);
-        setScreen(SCREENS.LOGIN);
-      } else { setUrlError("שגיאת סקריפט: " + d.error); }
-    } catch { setUrlError("לא ניתן להתחבר. בדוק URL ופרסום."); }
-    setUrlTesting(false);
-  };
+  const refreshUsers = () =>
+    sheetGet(SCRIPT_URL, { action: "getUsers" }).then(d => { if (d.ok) setUsers(d.users || []); }).catch(() => {});
 
   const login = async (name) => {
     setCurrentUser(name);
     try {
-      const d = await sheetGet(scriptUrl, { action: "getHistory", username: name });
+      const d = await sheetGet(SCRIPT_URL, { action: "getHistory", username: name });
       setUserHistory(d.ok ? d.history : []);
     } catch { setUserHistory([]); }
     setScreen(SCREENS.HOME);
@@ -156,8 +126,8 @@ export default function App() {
     if (!name) return;
     setAddingUser(true);
     try {
-      await sheetPost(scriptUrl, { action: "addUser", username: name });
-      await fetchUsers(scriptUrl);
+      await sheetPost(SCRIPT_URL, { action: "addUser", username: name });
+      await refreshUsers();
       setNewName("");
       login(name);
     } catch {}
@@ -168,7 +138,7 @@ export default function App() {
     setMessages([]); setLogged([]); setStartTime(Date.now()); setScreen(SCREENS.WORKOUT); setLoading(true);
     const sys = buildSystemPrompt(currentUser, userHistory, equipment);
     const first = [{ role: "user", content: "הגעתי לחדר כושר!" }];
-    const reply = await callClaude(first, sys, scriptUrl);
+    const reply = await callClaude(first, sys, SCRIPT_URL);
     setMessages([{ role: "user", content: "הגעתי לחדר כושר! 🏋️" }, { role: "assistant", content: reply }]);
     setLoading(false);
   };
@@ -181,7 +151,7 @@ export default function App() {
     const reply = await callClaude(
       next.map(m => ({ role: m.role, content: m.content })),
       buildSystemPrompt(currentUser, userHistory, equipment),
-      scriptUrl
+      SCRIPT_URL
     );
     setMessages([...next, { role: "assistant", content: reply }]);
     setLoading(false);
@@ -202,7 +172,7 @@ export default function App() {
     callClaude(
       next.map(m => ({ role: m.role, content: m.content })),
       buildSystemPrompt(currentUser, userHistory, equipment),
-      scriptUrl
+      SCRIPT_URL
     ).then(r => { setMessages([...next, { role: "assistant", content: r }]); setLoading(false); });
   };
 
@@ -215,8 +185,8 @@ export default function App() {
       exercises: logged,
     };
     try {
-      await sheetPost(scriptUrl, { action: "saveWorkout", username: currentUser, ...session });
-      const d = await sheetGet(scriptUrl, { action: "getHistory", username: currentUser });
+      await sheetPost(SCRIPT_URL, { action: "saveWorkout", username: currentUser, ...session });
+      const d = await sheetGet(SCRIPT_URL, { action: "getHistory", username: currentUser });
       if (d.ok) setUserHistory(d.history);
     } catch {}
     setSaving(false);
@@ -224,39 +194,6 @@ export default function App() {
   };
 
   const totalSets = logged.reduce((a, e) => a + e.sets.length, 0);
-
-  // ── SETUP ──────────────────────────────────────────────────
-  if (screen === SCREENS.SETUP) return (
-    <div style={{ minHeight: "100vh", background: C.bg, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "28px 20px", direction: "rtl", fontFamily: font }}>
-      <div style={{ fontSize: 48, marginBottom: 10 }}>⚙️</div>
-      <h1 style={{ color: "#fff", fontWeight: 900, fontSize: 22, margin: "0 0 6px" }}>הגדרת GymAgent</h1>
-      <p style={{ color: C.muted, fontSize: 12, textAlign: "center", maxWidth: 320, margin: "0 0 28px", lineHeight: 1.6 }}>
-        הגדרה חד-פעמית — רק URL אחד.
-      </p>
-
-      <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: 20, width: "100%", maxWidth: 380, marginBottom: 16 }}>
-        <div style={{ color: C.secondary, fontWeight: 700, fontSize: 12, marginBottom: 10 }}>📊 Apps Script URL</div>
-        <Inp value={urlInput} onChange={e => setUrlInput(e.target.value)}
-          placeholder="https://script.google.com/macros/s/.../exec"
-          style={{ width: "100%", boxSizing: "border-box", fontSize: 12 }} />
-      </div>
-
-      <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: 20, width: "100%", maxWidth: 380, marginBottom: 16 }}>
-        <div style={{ color: C.secondary, fontWeight: 700, fontSize: 12, marginBottom: 10 }}>🔑 מפתח Anthropic — שמור ב-Script Properties</div>
-        {["פתח Apps Script → Project Settings (⚙️)", "Script Properties → Add property", 'Key: ANTHROPIC_KEY | Value: sk-ant-api03-...'].map((s, i) => (
-          <div key={i} style={{ display: "flex", gap: 8, marginBottom: 6 }}>
-            <span style={{ background: C.primary, color: "#fff", borderRadius: "50%", width: 16, height: 16, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 800, flexShrink: 0, marginTop: 1 }}>{i+1}</span>
-            <span style={{ color: "#bbb", fontSize: 11, lineHeight: 1.4 }}>{s}</span>
-          </div>
-        ))}
-      </div>
-
-      {urlError && <div style={{ color: C.primary, fontSize: 12, marginBottom: 10 }}>⚠️ {urlError}</div>}
-      <Btn onClick={testAndSave} disabled={urlTesting} style={{ width: "100%", maxWidth: 380 }}>
-        {urlTesting ? "מתחבר..." : "שמור והתחבר ✓"}
-      </Btn>
-    </div>
-  );
 
   // ── LOGIN ──────────────────────────────────────────────────
   if (screen === SCREENS.LOGIN) return (
@@ -299,10 +236,6 @@ export default function App() {
           </Btn>
         </div>
       </div>
-
-      <button onClick={() => setScreen(SCREENS.SETUP)} style={{ background: "none", border: "none", color: "#444", fontSize: 12, cursor: "pointer", padding: "8px 0" }}>
-        ⚙️ שנה הגדרות
-      </button>
     </div>
   );
 
