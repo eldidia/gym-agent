@@ -144,9 +144,13 @@ function doPost(e) {
       if (!apiKey) return err("ANTHROPIC_KEY חסר ב-Script Properties");
 
       const payload = {
-        model:      "claude-sonnet-4-20250514",
-        max_tokens: 1000,
-        system:     body.system,
+        model:      "claude-haiku-4-5-20251001",
+        max_tokens: 700,
+        system: [{
+          type: "text",
+          text: body.system,
+          cache_control: { type: "ephemeral" },
+        }],
         messages:   body.messages,
       };
 
@@ -156,6 +160,7 @@ function doPost(e) {
           "Content-Type":      "application/json",
           "x-api-key":         apiKey,
           "anthropic-version": "2023-06-01",
+          "anthropic-beta":    "prompt-caching-2024-07-31",
         },
         payload: JSON.stringify(payload),
         muteHttpExceptions: true,

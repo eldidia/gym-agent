@@ -30,7 +30,7 @@ async function sheetPost(url, body) {
 function buildSystemPrompt(username, history, equipment) {
   const fmt = history.length === 0
     ? "אין היסטוריה — זה האימון הראשון."
-    : [...history].reverse().slice(0, 5).map((s, i) => {
+    : [...history].reverse().slice(0, 3).map((s, i) => {
         const d = new Date(s.date).toLocaleDateString("he-IL");
         const exs = s.exercises.map(e =>
           `  • ${e.name}${e.equipId ? ` (מכשיר ${e.equipId})` : ""}: ${e.sets.map(st => `${st.reps}×${st.weight}ק"ג`).join(", ")}`
@@ -59,7 +59,8 @@ ${fmt}${equipSection}
 
 async function callClaude(messages, systemPrompt, scriptUrl) {
   try {
-    const data = await sheetPost(scriptUrl, { action: "chat", system: systemPrompt, messages });
+    const trimmed = messages.slice(-10);
+    const data = await sheetPost(scriptUrl, { action: "chat", system: systemPrompt, messages: trimmed });
     if (!data.ok) return `שגיאה: ${data.error}`;
     return data.reply || "שגיאה — נסה שוב.";
   } catch { return "בעיית תקשורת עם הסוכן."; }
