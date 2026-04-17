@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { App as CapApp } from "@capacitor/app";
 
 // ─── Config ──────────────────────────────────────────────────
-const SCRIPT_URL = "https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzUqUuBrf6fqDWeNXIOiELm9f92eLW26ZeawOShed1Qr61oH6NnvzMW-r3FVaImZ4oCyw/exec";
 
 // ─── Design System ───────────────────────────────────────────
 const C = {
