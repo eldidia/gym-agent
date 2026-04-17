@@ -73,13 +73,23 @@ function Btn({ children, onClick, color = C.primary, style = {}, disabled = fals
       background: color, border: "none", borderRadius: 12,
       padding: "13px 20px", color: "#fff", fontWeight: 700, fontSize: 15,
       cursor: disabled ? "not-allowed" : "pointer", opacity: disabled ? 0.5 : 1,
-      WebkitTapHighlightColor: "transparent", ...style,
+      WebkitTapHighlightColor: "transparent", touchAction: "manipulation", minHeight: 48, ...style,
     }}>{children}</button>
   );
 }
-function Inp({ value, onChange, placeholder, type = "text", style = {}, onKeyDown }) {
-  return <input value={value} onChange={onChange} onKeyDown={onKeyDown} placeholder={placeholder} type={type}
-    style={{ background: "#15151f", border: `1px solid ${C.border}`, borderRadius: 12, padding: "13px 16px", color: "#fff", fontSize: 15, outline: "none", WebkitAppearance: "none", ...style }} />;
+function Inp({ value, onChange, placeholder, type = "text", inputMode, list, style = {}, onKeyDown }) {
+  return <input value={value} onChange={onChange} onKeyDown={onKeyDown} placeholder={placeholder}
+    type={type} inputMode={inputMode} list={list}
+    style={{ background: "#15151f", border: `1px solid ${C.border}`, borderRadius: 12, padding: "13px 16px", color: "#fff", fontSize: 16, outline: "none", WebkitAppearance: "none", ...style }} />;
+}
+function Page({ children, style = {} }) {
+  return (
+    <div style={{ minHeight: "var(--app-h, 100svh)", background: C.bg, direction: "rtl", fontFamily: font, display: "flex", flexDirection: "column", alignItems: "center" }}>
+      <div style={{ width: "100%", maxWidth: 520, flex: 1, padding: "40px 20px 28px", paddingTop: "calc(40px + env(safe-area-inset-top))", paddingBottom: "calc(28px + env(safe-area-inset-bottom))", ...style }}>
+        {children}
+      </div>
+    </div>
+  );
 }
 
 // ─── App ─────────────────────────────────────────────────────
@@ -198,7 +208,7 @@ export default function App() {
 
   // ── LOGIN ──────────────────────────────────────────────────
   if (screen === SCREENS.LOGIN) return (
-    <div style={{ minHeight: "100vh", background: C.bg, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "28px 20px", direction: "rtl", fontFamily: font }}>
+    <div style={{ minHeight: "var(--app-h, 100svh)", background: C.bg, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "28px 20px", paddingTop: "calc(28px + env(safe-area-inset-top))", paddingBottom: "calc(28px + env(safe-area-inset-bottom))", direction: "rtl", fontFamily: font }}>
       <div style={{ fontSize: 52, marginBottom: 6 }}>🏋️</div>
       <h1 style={{ color: "#fff", fontWeight: 900, fontSize: 26, margin: "0 0 4px" }}>GymAgent</h1>
       <p style={{ color: C.muted, fontSize: 12, margin: "0 0 32px", display: "flex", alignItems: "center", gap: 6 }}>
@@ -245,7 +255,7 @@ export default function App() {
     const thisWeek = userHistory.filter(h => Date.now() - new Date(h.date) < 7 * 86400000).length;
     const last = userHistory[userHistory.length - 1];
     return (
-      <div style={{ minHeight: "100vh", background: C.bg, direction: "rtl", fontFamily: font, padding: "40px 20px 28px" }}>
+      <Page>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 28 }}>
           <div>
             <div style={{ color: C.muted, fontSize: 13 }}>שלום,</div>
@@ -298,14 +308,14 @@ export default function App() {
             <div style={{ fontSize: 13, opacity: 0.75, marginTop: 3 }}>הסוכן יבנה אימון מותאם אישית</div>
           </div>
         </button>
-      </div>
+      </Page>
     );
   }
 
   // ── WORKOUT ────────────────────────────────────────────────
   if (screen === SCREENS.WORKOUT) return (
-    <div style={{ height: "100vh", background: C.bg, direction: "rtl", fontFamily: font, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-      <div style={{ background: C.card, borderBottom: `1px solid ${C.border}`, padding: "14px 18px", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0, paddingTop: "env(safe-area-inset-top, 14px)" }}>
+    <div style={{ height: "var(--app-h, 100svh)", background: C.bg, direction: "rtl", fontFamily: font, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      <div style={{ background: C.card, borderBottom: `1px solid ${C.border}`, padding: "14px 18px", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0, paddingTop: "calc(14px + env(safe-area-inset-top))" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <span style={{ width: 9, height: 9, background: "#22c55e", borderRadius: "50%", display: "inline-block", boxShadow: "0 0 8px #22c55e" }} />
           <span style={{ color: "#fff", fontWeight: 800, fontSize: 14 }}>אימון פעיל — {currentUser}</span>
@@ -333,7 +343,11 @@ export default function App() {
         ))}
         {loading && (
           <div style={{ display: "flex", justifyContent: "flex-end" }}>
-            <div style={{ background: "#1a1a2e", border: "1px solid #252540", borderRadius: "18px 18px 18px 4px", padding: "12px 16px", color: "#555", fontSize: 14 }}>⟳ חושב...</div>
+            <div style={{ background: "#1a1a2e", border: "1px solid #252540", borderRadius: "18px 18px 18px 4px", padding: "14px 18px", display: "flex", gap: 5, alignItems: "center" }}>
+              {[0,1,2].map(i => (
+                <span key={i} style={{ width: 7, height: 7, background: "#6666aa", borderRadius: "50%", display: "inline-block", animation: `blink 1.2s ease-in-out ${i * 0.2}s infinite` }} />
+              ))}
+            </div>
           </div>
         )}
       </div>
@@ -368,10 +382,10 @@ export default function App() {
             {newEx.sets.map((s, i) => (
               <div key={i} style={{ display: "flex", gap: 8, marginBottom: 8, alignItems: "center" }}>
                 <span style={{ color: "#444", fontSize: 12, minWidth: 22, textAlign: "center" }}>S{i + 1}</span>
-                <Inp value={s.reps} type="number"
+                <Inp value={s.reps} type="number" inputMode="numeric"
                   onChange={e => { const sets = [...newEx.sets]; sets[i] = { ...sets[i], reps: e.target.value }; setNewEx(x => ({ ...x, sets })); }}
                   placeholder="חזרות" style={{ flex: 1, borderRadius: 9, padding: "10px 12px" }} />
-                <Inp value={s.weight} type="number"
+                <Inp value={s.weight} type="number" inputMode="decimal"
                   onChange={e => { const sets = [...newEx.sets]; sets[i] = { ...sets[i], weight: e.target.value }; setNewEx(x => ({ ...x, sets })); }}
                   placeholder='ק"ג' style={{ flex: 1, borderRadius: 9, padding: "10px 12px" }} />
               </div>
@@ -392,7 +406,7 @@ export default function App() {
 
   // ── HISTORY ────────────────────────────────────────────────
   return (
-    <div style={{ minHeight: "100vh", background: C.bg, direction: "rtl", fontFamily: font, padding: "40px 20px 28px" }}>
+    <Page>
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
         <button onClick={() => setScreen(SCREENS.HOME)} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: "9px 14px", color: "#aaa", fontSize: 14, cursor: "pointer" }}>← חזרה</button>
         <h2 style={{ color: "#fff", margin: 0, fontSize: 17, fontWeight: 900 }}>היסטוריה — {currentUser}</h2>
@@ -423,6 +437,6 @@ export default function App() {
             );
           })
       }
-    </div>
+    </Page>
   );
 }

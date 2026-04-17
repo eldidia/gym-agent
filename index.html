@@ -3,18 +3,22 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#080810" />
+    <meta name="theme-color" content="#06060f" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="mobile-web-app-capable" content="yes" />
     <title>GymAgent</title>
     <style>
-      * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-      body { background: #080810; font-family: 'Segoe UI', Tahoma, sans-serif; overscroll-behavior: none; }
-      /* Prevent iOS auto-zoom on input focus — requires font-size >= 16px */
-      input, button, select, textarea { font-size: 16px; font-family: inherit; }
-      /* Dynamic viewport height — updated by JS to exclude Safari address bar */
+      *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+      html, body, #root { height: 100%; }
+      body { background: #06060f; font-family: system-ui, -apple-system, 'Segoe UI', Tahoma, sans-serif; overscroll-behavior: none; -webkit-font-smoothing: antialiased; }
+      input, button, select, textarea { font-family: inherit; font-size: 16px; }
       :root { --app-h: 100vh; }
+      @keyframes blink {
+        0%, 100% { opacity: 0.25; transform: scale(0.75); }
+        50%       { opacity: 1;    transform: scale(1); }
+      }
+      ::-webkit-scrollbar { width: 0; height: 0; }
     </style>
   </head>
   <body>
