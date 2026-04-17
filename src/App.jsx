@@ -256,6 +256,15 @@ export default function App() {
     </div>
   );
 
+  const logout = () => {
+    setCurrentUser(null);
+    setUserHistory([]);
+    setMessages([]);
+    setLogged([]);
+    setInput("");
+    setScreen(SCREENS.LOGIN);
+  };
+
   // ── HOME ───────────────────────────────────────────────────
   if (screen === SCREENS.HOME) {
     const thisWeek = userHistory.filter(h => Date.now() - new Date(h.date) < 7 * 86400000).length;
@@ -269,7 +278,7 @@ export default function App() {
           </div>
           <div style={{ display: "flex", gap: 8 }}>
             <button onClick={() => setScreen(SCREENS.HISTORY)} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: "9px 14px", color: "#aaa", fontSize: 13, cursor: "pointer" }}>📋</button>
-            <button onClick={() => setScreen(SCREENS.LOGIN)} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: "9px 14px", color: "#aaa", fontSize: 13, cursor: "pointer" }}>🔄</button>
+            <button onClick={logout} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: "9px 14px", color: "#aaa", fontSize: 13, cursor: "pointer", touchAction: "manipulation" }}>🚪</button>
           </div>
         </div>
 
