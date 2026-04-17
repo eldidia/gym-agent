@@ -83,20 +83,27 @@ function Btn({ label, icon, onClick, color=C.primary, outline=false, full=false,
     <button disabled={disabled} onClick={onClick} style={{
       display:"flex", alignItems:"center", justifyContent:"center", gap:6,
       background:bg, border, borderRadius:14,
-      padding: sm ? "9px 16px" : "13px 22px",
+      padding: sm ? "10px 16px" : "14px 22px",
       color:textCol, fontWeight:700,
-      fontSize: sm ? 13 : 15,
+      fontSize:16,
       width: full ? "100%" : "auto",
       cursor: disabled ? "not-allowed" : "pointer",
       opacity: disabled ? 0.45 : 1,
       WebkitTapHighlightColor:"transparent",
-      transition:"opacity 0.15s, transform 0.1s",
+      touchAction:"manipulation",
+      WebkitUserSelect:"none",
+      userSelect:"none",
+      WebkitAppearance:"none",
+      appearance:"none",
+      transition:"opacity 0.15s",
+      flexShrink:0,
       ...style
     }}
-      onTouchStart={e => { if(!disabled) e.currentTarget.style.opacity="0.7"; }}
+      onTouchStart={e => { if(!disabled) e.currentTarget.style.opacity="0.65"; }}
       onTouchEnd={e => { e.currentTarget.style.opacity="1"; }}
+      onTouchCancel={e => { e.currentTarget.style.opacity="1"; }}
     >
-      {icon && <span style={{fontSize:sm?16:18}}>{icon}</span>}
+      {icon && <span style={{fontSize:sm?16:20,lineHeight:1}}>{icon}</span>}
       {label}
     </button>
   );
@@ -109,8 +116,12 @@ function Input({ value, onChange, placeholder, type="text", onKeyDown, autoFocus
       style={{
         background:C.card, border:`1.5px solid ${C.border}`,
         borderRadius:14, padding:"13px 16px", color:C.text,
-        fontSize:15, outline:"none", width:"100%", boxSizing:"border-box",
-        WebkitAppearance:"none", fontFamily:font, ...style,
+        fontSize:16, /* חובה 16px — מונע zoom אוטומטי ב-iOS */
+        outline:"none", width:"100%", boxSizing:"border-box",
+        WebkitAppearance:"none", appearance:"none",
+        fontFamily:font, touchAction:"manipulation",
+        WebkitUserSelect:"text", userSelect:"text",
+        ...style,
       }}
       onFocus={e => e.target.style.borderColor=C.primary}
       onBlur={e => e.target.style.borderColor=C.border}
@@ -137,7 +148,8 @@ function Spinner({ size=36, color=C.primary }) {
 
 function LoadScreen({ msg, sub }) {
   return (
-    <div style={{ minHeight:"100dvh", background:C.bg, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:20, fontFamily:font }}>
+    <div style={{ height:"100vh", minHeight:"-webkit-fill-available", background:C.bg, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:20, fontFamily:font,
+      paddingTop:"env(safe-area-inset-top,0px)", paddingBottom:"env(safe-area-inset-bottom,0px)" }}>
       <span style={{fontSize:48}}>🏋️</span>
       <Spinner size={44} />
       <div style={{ textAlign:"center" }}>
@@ -393,7 +405,7 @@ export default function App() {
   // RENDER
   // ══════════════════════════════════════════════════════════
   const wrap = (children, padded=true) => (
-    <div style={{ minHeight:"100dvh", background:C.bg, fontFamily:font, direction:"rtl",
+    <div style={{ minHeight:"100vh", background:C.bg, fontFamily:font, direction:"rtl",
       padding: padded ? "clamp(16px,4vw,28px) clamp(14px,4vw,20px) 24px" : "0",
       maxWidth:520, margin:"0 auto" }}>
       {children}
@@ -404,7 +416,7 @@ export default function App() {
 
   // ── LOGIN ──────────────────────────────────────────────────
   if (screen===SCREENS.LOGIN) return wrap(
-    <div style={{ display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", minHeight:"100dvh", padding:"24px 20px", gap:0 }}>
+    <div style={{ display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", minHeight:"100vh", minHeight:"-webkit-fill-available", padding:"clamp(20px,5vw,40px) 20px", gap:0 }}>
       <div style={{ fontSize:"clamp(52px,12vw,72px)", marginBottom:12, lineHeight:1 }}>🏋️</div>
       <h1 style={{ color:C.text, fontWeight:900, fontSize:"clamp(26px,6vw,36px)", margin:"0 0 6px", letterSpacing:-1 }}>GymAgent</h1>
       <p style={{ color:C.sub, fontSize:13, margin:"0 0 28px" }}>מאמן אישי חכם מבוסס AI</p>
@@ -543,7 +555,7 @@ export default function App() {
   if (screen===SCREENS.EQUIPMENT) return wrap(
     <>
       <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:20 }}>
-        <button onClick={()=>setScreen(SCREENS.HOME)} style={{ background:C.card, border:`1.5px solid ${C.border}`, borderRadius:12, padding:"9px 14px", color:C.sub, fontSize:13, cursor:"pointer" }}>←</button>
+        <button onClick={()=>setScreen(SCREENS.HOME)} style={{ background:C.card, border:`1.5px solid ${C.border}`, borderRadius:12, padding:"9px 14px", color:C.sub, fontSize:16, cursor:"pointer", touchAction:"manipulation" }}>←</button>
         <h2 style={{ color:C.text, margin:0, fontSize:"clamp(16px,4vw,20px)", fontWeight:900 }}>ציוד חדר הכושר</h2>
       </div>
       <div style={{ color:C.sub, fontSize:12, marginBottom:16 }}>לחץ על "סרטון הדרכה" לצפייה בשימוש נכון</div>
@@ -556,7 +568,7 @@ export default function App() {
 
   // ── WORKOUT ────────────────────────────────────────────────
   if (screen===SCREENS.WORKOUT) return (
-    <div style={{ height:"100dvh", background:C.bg, fontFamily:font, direction:"rtl", display:"flex", flexDirection:"column", overflow:"hidden" }}>
+    <div style={{ height:"100vh", minHeight:"-webkit-fill-available", background:C.bg, fontFamily:font, direction:"rtl", display:"flex", flexDirection:"column", overflow:"hidden" }}>
       {/* Bar */}
       <div style={{ background:C.surface, borderBottom:`1.5px solid ${C.border}`, padding:"10px 14px", paddingTop:"max(10px,env(safe-area-inset-top))", display:"flex", alignItems:"center", justifyContent:"space-between", flexShrink:0 }}>
         <div style={{ display:"flex", alignItems:"center", gap:8 }}>
@@ -571,7 +583,7 @@ export default function App() {
       </div>
 
       {/* Chat */}
-      <div ref={chatRef} style={{ flex:1, overflowY:"auto", padding:"14px 14px 8px", display:"flex", flexDirection:"column", gap:10 }}>
+      <div ref={chatRef} style={{ flex:1, overflowY:"auto", WebkitOverflowScrolling:"touch", padding:"14px 14px 8px", display:"flex", flexDirection:"column", gap:10 }}>
         {messages.map((m,i)=>(
           <div key={i} style={{ display:"flex", justifyContent: m.role==="user"?"flex-start":"flex-end" }}>
             <div style={{
@@ -608,7 +620,7 @@ export default function App() {
         <button onClick={()=>setShowLogModal(true)} style={{ background:`${C.orange}18`, border:`1.5px solid ${C.orange}44`, borderRadius:12, padding:"10px 13px", color:C.orange, fontSize:22, cursor:"pointer", lineHeight:1, flexShrink:0 }}>＋</button>
         <input value={chatInput} onChange={e=>setChatInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&sendChat()}
           placeholder="שאל את הסוכן..."
-          style={{ flex:1, background:C.card, border:`1.5px solid ${C.border}`, borderRadius:12, padding:"11px 14px", color:C.text, fontSize:"clamp(13px,3vw,15px)", outline:"none", minWidth:0, fontFamily:font }} />
+          style={{ flex:1, background:C.card, border:"1.5px solid "+C.border, borderRadius:12, padding:"11px 14px", color:C.text, fontSize:16, outline:"none", minWidth:0, fontFamily:font, WebkitAppearance:"none", touchAction:"manipulation" }} />
         <Btn label="שלח" onClick={sendChat} disabled={aiLoading} sm style={{ borderRadius:12 }} />
       </div>
 
@@ -643,10 +655,10 @@ export default function App() {
                 <span style={{ color:C.muted, fontSize:12, minWidth:22 }}>S{i+1}</span>
                 <input value={s.reps} type="number"
                   onChange={e=>{const sets=[...newEx.sets];sets[i]={...sets[i],reps:e.target.value};setNewEx(x=>({...x,sets}));}}
-                  placeholder="חזרות" style={{ flex:1, background:C.card, border:`1.5px solid ${C.border}`, borderRadius:10, padding:"10px 12px", color:C.text, fontSize:14, outline:"none" }} />
+                  placeholder="חזרות" style={{ flex:1, background:C.card, border:"1.5px solid "+C.border, borderRadius:10, padding:"10px 12px", color:C.text, fontSize:16, outline:"none", WebkitAppearance:"none" }} />
                 <input value={s.weight} type="number"
                   onChange={e=>{const sets=[...newEx.sets];sets[i]={...sets[i],weight:e.target.value};setNewEx(x=>({...x,sets}));}}
-                  placeholder='ק"ג' style={{ flex:1, background:C.card, border:`1.5px solid ${C.border}`, borderRadius:10, padding:"10px 12px", color:C.text, fontSize:14, outline:"none" }} />
+                  placeholder='ק"ג' style={{ flex:1, background:C.card, border:"1.5px solid "+C.border, borderRadius:10, padding:"10px 12px", color:C.text, fontSize:16, outline:"none", WebkitAppearance:"none" }} />
               </div>
             ))}
             <button onClick={()=>setNewEx(x=>({...x,sets:[...x.sets,{reps:"",weight:""}]}))}
@@ -654,7 +666,7 @@ export default function App() {
               + סט נוסף
             </button>
             <div style={{ display:"flex", gap:10 }}>
-              <button onClick={()=>setShowLogModal(false)} style={{ flex:1, background:C.card, border:`1.5px solid ${C.border}`, borderRadius:14, padding:13, color:C.sub, fontSize:14, cursor:"pointer" }}>ביטול</button>
+              <button onClick={()=>setShowLogModal(false)} style={{ flex:1, background:C.card, border:`1.5px solid ${C.border}`, borderRadius:14, padding:13, color:C.sub, fontSize:16, cursor:"pointer" }}>ביטול</button>
               <Btn label="שמור ✓" onClick={logEx} color={C.teal} style={{ flex:2, borderRadius:14 }} />
             </div>
           </div>
@@ -667,7 +679,7 @@ export default function App() {
   return wrap(
     <>
       <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:20 }}>
-        <button onClick={()=>setScreen(SCREENS.HOME)} style={{ background:C.card, border:`1.5px solid ${C.border}`, borderRadius:12, padding:"9px 14px", color:C.sub, fontSize:13, cursor:"pointer" }}>←</button>
+        <button onClick={()=>setScreen(SCREENS.HOME)} style={{ background:C.card, border:`1.5px solid ${C.border}`, borderRadius:12, padding:"9px 14px", color:C.sub, fontSize:16, cursor:"pointer", touchAction:"manipulation" }}>←</button>
         <h2 style={{ color:C.text, margin:0, fontSize:"clamp(14px,3.5vw,18px)", fontWeight:900 }}>היסטוריה — {currentUser}</h2>
       </div>
       {userHistory.length===0
