@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 
 // ─── Config ───────────────────────────────────────────────────
-const SCRIPT_URL = "https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzUqUuBrf6fqDWeNXIOiELm9f92eLW26ZeawOShed1Qr61oH6NnvzMW-r3FVaImZ4oCyw/exec";
 
 const C = {
   bg: "#080810", card: "#0f0f1a", card2: "#13131f", border: "#1e1e30",
