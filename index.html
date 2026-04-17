@@ -2,13 +2,101 @@
 <html lang="he" dir="rtl">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#080810" />
+    <!-- viewport-fit=cover: חובה ל-notch/Dynamic Island ב-iOS ו-punch-hole ב-Android -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
+    <meta name="theme-color" content="#0a0a12" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <title>GymAgent</title>
     <style>
-      * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-      body { background: #080810; font-family: 'Segoe UI', Tahoma, sans-serif; overscroll-behavior: none; }
-      input, button { font-family: inherit; }
+      /* ── Reset ── */
+      *, *::before, *::after {
+        margin: 0; padding: 0;
+        box-sizing: border-box;
+        /* מונע highlight כחול בלחיצה על Android + iOS */
+        -webkit-tap-highlight-color: transparent;
+        /* מונע עיכוב 300ms של double-tap */
+        touch-action: manipulation;
+        /* מונע בחירת טקסט בלחיצה ארוכה */
+        -webkit-user-select: none;
+        user-select: none;
+      }
+
+      /* מאפשר בחירת טקסט רק ב-inputs */
+      input, textarea {
+        -webkit-user-select: text;
+        user-select: text;
+      }
+
+      html {
+        /* גובה מלא כולל safe areas */
+        height: 100%;
+        height: -webkit-fill-available;
+        /* מונע שינוי גודל טקסט בסיבוב מסך */
+        -webkit-text-size-adjust: 100%;
+        text-size-adjust: 100%;
+      }
+
+      body {
+        height: 100%;
+        height: -webkit-fill-available;
+        background: #0a0a12;
+        font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        /* מונע pull-to-refresh בטעות */
+        overscroll-behavior: none;
+        overscroll-behavior-y: none;
+        /* גלילה חלקה ב-iOS */
+        -webkit-overflow-scrolling: touch;
+      }
+
+      #root {
+        height: 100%;
+        height: -webkit-fill-available;
+      }
+
+      input, button, select, textarea {
+        font-family: inherit;
+        /* חובה ל-iOS — מונע zoom אוטומטי */
+        font-size: 16px;
+      }
+
+      /* מונע zoom ב-iOS כשמתמקדים ב-input (גרסה בטוחה) */
+      input[type="text"],
+      input[type="number"],
+      input[type="email"],
+      input[type="password"],
+      textarea {
+        font-size: 16px !important;
+      }
+
+      /* גלילה חלקה על iOS */
+      .scroll-container {
+        -webkit-overflow-scrolling: touch;
+        overflow-y: auto;
+      }
+
+      /* מונע בעיית גובה ב-iOS Safari עם keyboard */
+      .full-height {
+        height: 100vh;
+        height: 100dvh;
+        height: -webkit-fill-available;
+      }
+
+      /* אנימציות — מכבה אם המשתמש מעדיף */
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+          animation-duration: 0.01ms !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+
+      /* Capacitor safe area variables כ-fallback */
+      :root {
+        --sat: env(safe-area-inset-top, 0px);
+        --sar: env(safe-area-inset-right, 0px);
+        --sab: env(safe-area-inset-bottom, 0px);
+        --sal: env(safe-area-inset-left, 0px);
+      }
     </style>
   </head>
   <body>
