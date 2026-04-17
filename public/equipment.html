@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ציוד חדר כושר — GymAgent</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#080810; color:#f0f0f0; font-family:'Segoe UI',Tahoma,sans-serif; padding:20px 16px 60px; }
+h1 { text-align:center; font-size:20px; margin-bottom:4px; }
+.sub { text-align:center; color:#666; font-size:12px; margin-bottom:12px; line-height:1.6; }
+.counter { text-align:center; margin-bottom:24px; }
+.counter span { background:#e63946; color:#fff; border-radius:20px; padding:4px 14px; font-size:13px; font-weight:700; }
+.category { margin-bottom:28px; }
+.cat-title { font-size:11px; font-weight:800; letter-spacing:3px; color:#555; margin-bottom:12px; border-bottom:1px solid #1a1a2a; padding-bottom:8px; }
+.grid { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+.card { background:#0f0f1a; border:1.5px solid #1e1e30; border-radius:14px; overflow:hidden; position:relative; }
+.card.numbered { border-color:#e63946; }
+.img-box { height:110px; background:#13131f; overflow:hidden; display:flex; align-items:center; justify-content:center; }
+.img-box img { width:100%; height:100%; object-fit:cover; object-position:center; display:block; }
+.img-box .fallback { font-size:38px; display:none; }
+.info { padding:10px 12px 12px; }
+.name { font-weight:700; font-size:13px; margin-bottom:3px; color:#fff; }
+.muscles { font-size:10px; color:#f4a261; margin-bottom:2px; }
+.desc { font-size:10px; color:#666; margin-bottom:8px; line-height:1.4; }
+.num-row { display:flex; align-items:center; gap:8px; }
+.num-label { font-size:10px; color:#555; white-space:nowrap; }
+.num-input { background:#1a1a28; border:1px solid #2a2a40; border-radius:8px; padding:6px 10px; color:#fff; font-size:14px; font-weight:800; width:58px; text-align:center; outline:none; }
+.num-input:focus { border-color:#e63946; }
+.num-badge { position:absolute; top:7px; left:7px; background:#e63946; color:#fff; border-radius:50%; width:26px; height:26px; display:none; align-items:center; justify-content:center; font-size:12px; font-weight:900; z-index:2; box-shadow:0 2px 8px #e6394666; }
+.card.numbered .num-badge { display:flex; }
+.export-btn { display:block; width:100%; max-width:420px; margin:28px auto 0; background:linear-gradient(135deg,#e63946,#b91c2c); border:none; border-radius:16px; padding:18px; color:#fff; font-size:16px; font-weight:800; cursor:pointer; }
+.output-box { background:#0f0f1a; border:1px solid #1e1e30; border-radius:14px; padding:16px; margin:14px auto; max-width:420px; font-size:11px; color:#aaa; font-family:monospace; white-space:pre-wrap; word-break:break-all; display:none; }
+.copy-btn { display:none; width:100%; max-width:420px; margin:0 auto; background:#2a9d8f; border:none; border-radius:12px; padding:14px; color:#fff; font-size:14px; font-weight:700; cursor:pointer; }
+.note { text-align:center; color:#444; font-size:11px; margin-top:20px; line-height:1.7; }
+</style>
+</head>
+<body>
+
+<h1>🏋️ ציוד חדר הכושר</h1>
+<p class="sub">זהה כל מכשיר לפי התמונה → הכנס את מספרו בחדר שלך</p>
+<div class="counter">סומנו: <span id="count">0</span> מכשירים</div>
+
+<div id="list"></div>
+
+<button class="export-btn" onclick="generate()">⚡ צור קוד EQUIPMENT לסקריפט</button>
+<div class="output-box" id="output"></div>
+<button class="copy-btn" id="copy-btn" onclick="copyCode()">📋 העתק קוד</button>
+<p class="note">הדבק ב-GymAgent.gs בשורה: <code style="color:#e63946">const EQUIPMENT = [...]</code></p>
+
+<script>
+// תמונות נשמרות מקומית ב-/equipment/ (מורדות ע"י GitHub Actions)
+const CATS = [
+  { title:"🦵 רגליים", items:[
+    { key:"squat_rack",     name:"מסגרת סקוואט / ראק",    muscles:"ירכיים, ישבן, גב תחתון",   desc:"סקוואט חופשי, לחיצת כתפיים",    emoji:"🏗️" },
+    { key:"smith",          name:"סמית' מאשין",             muscles:"חזה, כתפיים, ירכיים",      desc:"סקוואט/לחיצת חזה מודרכת",       emoji:"🔩" },
+    { key:"leg_press",      name:"לג פרס",                  muscles:"ירכיים, ישבן, שוקיים",     desc:"לחיצת רגליים בישיבה",            emoji:"🦵" },
+    { key:"leg_ext",        name:"לג אקסטנשן",              muscles:"ארבע-ראשי",                desc:"פשיטת ברך בישיבה",               emoji:"⬆️" },
+    { key:"leg_curl",       name:"לג קרל (שכיבה)",          muscles:"דו-ראשי ירך, המסטרינג",   desc:"כפיפת ברך שכיבה",               emoji:"⬇️" },
+    { key:"hack_squat",     name:"האק סקוואט 45°",          muscles:"ירכיים, ישבן",             desc:"סקוואט על מכונה משופעת",         emoji:"📐" },
+    { key:"abductor",       name:"אדקטור / אבדקטור",        muscles:"מפשעה, ירך חיצונית",      desc:"פתיחה/סגירה של הרגליים",         emoji:"↔️" },
+    { key:"calf_raise",     name:"עליית קרסול",             muscles:"שוקיים, גסטרוקנמיוס",     desc:"כפיפת כף רגל עם משקל",           emoji:"👟" },
+  ]},
+  { title:"💪 חזה", items:[
+    { key:"bench_flat",     name:"ספסל לחיצה שטוח",        muscles:"חזה, תלת-ראשי, כתפיים",   desc:"לחיצת חזה עם מוט/משקולות",      emoji:"🛏️" },
+    { key:"bench_incline",  name:"ספסל משופע (Incline)",    muscles:"חזה עליון, כתפיים",        desc:"לחיצת חזה עליון",               emoji:"📈" },
+    { key:"pec_deck",       name:"פק דק / פרפר",            muscles:"חזה פנימי ואמצעי",         desc:"כיווץ חזה על מכונה",             emoji:"🦋" },
+    { key:"cable_cross",    name:"עמוד כבל / קרוסאובר",    muscles:"חזה, כתפיים קדמיות",       desc:"כריעת חזה בכבל (Crossover)",    emoji:"✂️" },
+  ]},
+  { title:"🏋️ גב", items:[
+    { key:"lat_pulldown",   name:"לט פולדאון",              muscles:"גב רחב, כפיפות",           desc:"משיכת מוט לחזה בישיבה",          emoji:"⬇️" },
+    { key:"seated_row",     name:"חתירה בישיבה (כבל)",      muscles:"גב אמצעי, כפיפות",         desc:"משיכת כבל לבטן בישיבה",          emoji:"🚣" },
+    { key:"cable_cross",    name:"עמוד כבל כפול",           muscles:"גב, כתפיים, ידיים, ליבה", desc:"כל תרגילי כבל חופשיים",          emoji:"🗼" },
+    { key:"back_ext",       name:"היפר אקסטנשן",            muscles:"גב תחתון, ישבן",           desc:"פשיטת גב תחתון (Roman chair)",   emoji:"🔄" },
+    { key:"pullup_bar",     name:"מתח (Pull-up bar)",       muscles:"גב רחב, כפיפות, ליבה",    desc:"מתח גוף חופשי",                  emoji:"🔝" },
+  ]},
+  { title:"🎯 כתפיים", items:[
+    { key:"shoulder_press", name:"לחיצת כתפיים מכונה",     muscles:"דלתא קדמי/צדי, תלת-ראשי", desc:"לחיצה עילית בישיבה",            emoji:"⬆️" },
+    { key:"rear_delt",      name:"כתף אחורית / Reverse Fly",muscles:"דלתא אחורי, גב עליון",    desc:"Pec deck הפוך לכתף אחורית",      emoji:"🔙" },
+    { key:"lateral_raise",  name:"Lateral Raise (כבל/משקל)",muscles:"דלתא צידי",               desc:"פשיטת כתפיים",                   emoji:"↕️" },
+  ]},
+  { title:"💪 ידיים", items:[
+    { key:"preacher_curl",  name:"ספסל Preacher / כפיפות", muscles:"דו-ראשי, ברכיאליס",        desc:"כפיפות מרפק בזווית",             emoji:"🙏" },
+    { key:"tricep_push",    name:"פשיטת מרפק (כבל)",       muscles:"תלת-ראשי",                 desc:"Pushdown — כבל עילי",             emoji:"📉" },
+  ]},
+  { title:"🏃 קרדיו", items:[
+    { key:"treadmill",      name:"הליכון",                  muscles:"רגליים, לב-ריאה",          desc:"הליכה / ריצה",                   emoji:"🏃" },
+    { key:"elliptical",     name:"אליפטיקל",                muscles:"כל הגוף, לב-ריאה",         desc:"אירובי — עומס נמוך על מפרקים", emoji:"🔄" },
+    { key:"bike",           name:"אופני כושר / ספינינג",    muscles:"ירכיים, לב-ריאה",          desc:"רכיבה קבועה / ספינינג",          emoji:"🚲" },
+    { key:"rowing_m",       name:"מכונת חתירה",             muscles:"גב, רגליים, ידיים, ליבה", desc:"חתירה — אירובי כל הגוף",        emoji:"🚣" },
+    { key:"stair",          name:"מדרגות / Stepper",        muscles:"ירכיים, ישבן, שוקיים",    desc:"עלייה במדרגות עצימה",            emoji:"🪜" },
+  ]},
+  { title:"🧘 ליבה + כללי", items:[
+    { key:"ab_machine",     name:"מכונת בטן",               muscles:"בטן ישרה, אגן",            desc:"כיווץ בטן ממוקד",                emoji:"💫" },
+    { key:"dumbbell_rack",  name:"מתלה משקולות יד",          muscles:"כל הגוף",                  desc:"משקולות 1–50 ק\"ג",             emoji:"🏋️" },
+    { key:"barbell_area",   name:"אזור מוטות + תקעים",      muscles:"כל הגוף",                  desc:"מוטות ותקעי משקל חופשיים",       emoji:"🔩" },
+    { key:"dip_station",    name:"תחנת Dips / מקבילים",     muscles:"תלת-ראשי, חזה תחתון",     desc:"Dips גוף חופשי",                 emoji:"🤸" },
+    { key:"cable_rotate",   name:"רוטציה בכבל (ליבה)",      muscles:"אלכסוניים, ליבה",          desc:"סיבוב פלג גוף עם כבל",           emoji:"🔁" },
+  ]},
+];
+
+const vals = {};
+
+function render() {
+  document.getElementById('list').innerHTML = CATS.map(cat => `
+    <div class="category">
+      <div class="cat-title">${cat.title}</div>
+      <div class="grid">
+        ${cat.items.map(item => `
+          <div class="card" id="card-${item.key}">
+            <div class="num-badge" id="badge-${item.key}"></div>
+            <div class="img-box">
+              <img src="/equipment/${item.key}.jpg" alt="${item.name}"
+                onerror="this.style.display='none';document.getElementById('fb-${item.key}').style.display='flex'">
+              <div class="fallback" id="fb-${item.key}">${item.emoji}</div>
+            </div>
+            <div class="info">
+              <div class="name">${item.name}</div>
+              <div class="muscles">💪 ${item.muscles}</div>
+              <div class="desc">${item.desc}</div>
+              <div class="num-row">
+                <span class="num-label">מס':</span>
+                <input class="num-input" type="number" min="1" max="99" placeholder="—"
+                  oninput="setNum('${item.key}',this.value)">
+              </div>
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>`).join('');
+}
+
+function setNum(key, v) {
+  vals[key] = v;
+  const badge = document.getElementById('badge-' + key);
+  const card  = document.getElementById('card-' + key);
+  if (v) { badge.textContent = v; card.classList.add('numbered'); }
+  else   { badge.textContent = ''; card.classList.remove('numbered'); }
+  document.getElementById('count').textContent =
+    Object.values(vals).filter(x => x && x.trim()).length;
+}
+
+function findItem(key) {
+  for (const c of CATS) for (const i of c.items) if (i.key === key) return i;
+}
+
+function generate() {
+  const entries = Object.entries(vals)
+    .filter(([,v]) => v && v.trim())
+    .sort((a,b) => Number(a[1]) - Number(b[1]));
+  if (!entries.length) { alert('לא הוזנו מספרים עדיין.'); return; }
+  const lines = entries.map(([key, num]) => {
+    const i = findItem(key);
+    return `  { id: "${num}", name: "${i.name}", muscles: "${i.muscles}", desc: "${i.desc}" },`;
+  });
+  const code = `const EQUIPMENT = [\n${lines.join('\n')}\n];`;
+  const out = document.getElementById('output');
+  const btn = document.getElementById('copy-btn');
+  out.textContent = code; out.style.display = 'block'; btn.style.display = 'block';
+  out.scrollIntoView({ behavior: 'smooth' });
+}
+
+function copyCode() {
+  navigator.clipboard.writeText(document.getElementById('output').textContent).then(() => {
+    const b = document.getElementById('copy-btn');
+    b.textContent = '✅ הועתק!';
+    setTimeout(() => { b.textContent = '📋 העתק קוד'; }, 2000);
+  });
+}
+
+render();
+</script>
+</body>
+</html>
