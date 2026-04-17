@@ -234,6 +234,7 @@ export default function App() {
   const [currentUser, setCurrentUser]   = useState(null);
   const [userHistory, setUserHistory]   = useState([]);
   const [nameInput, setNameInput]       = useState("");
+  const [users, setUsers]               = useState(() => LS.get(LS_USERS) || []);
   const [loginLoading, setLoginLoading] = useState(false);
   const [loginError, setLoginError]     = useState("");
   const [confirmNew, setConfirmNew]     = useState(false);
@@ -279,6 +280,9 @@ export default function App() {
       sheetGet({ action:"getUsers" }).catch(()=>null),
       sheetGet({ action:"getEquipment" }).catch(()=>null),
     ]);
+    const userList = ud?.ok ? ud.users : (LS.get(LS_USERS) || []);
+    if (ud?.ok) LS.set(LS_USERS, userList);
+    setUsers(userList);
     const eqList = ed?.ok ? ed.equipment : (LS.get(LS_EQUIP) || []);
     if (ed?.ok) LS.set(LS_EQUIP, eqList);
     setEquipment(eqList);
@@ -403,16 +407,53 @@ export default function App() {
     <div style={{ display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", minHeight:"100dvh", padding:"24px 20px", gap:0 }}>
       <div style={{ fontSize:"clamp(52px,12vw,72px)", marginBottom:12, lineHeight:1 }}>🏋️</div>
       <h1 style={{ color:C.text, fontWeight:900, fontSize:"clamp(26px,6vw,36px)", margin:"0 0 6px", letterSpacing:-1 }}>GymAgent</h1>
-      <p style={{ color:C.sub, fontSize:13, margin:"0 0 36px" }}>מאמן אישי חכם מבוסס AI</p>
+      <p style={{ color:C.sub, fontSize:13, margin:"0 0 28px" }}>מאמן אישי חכם מבוסס AI</p>
 
       <div style={{ width:"100%", maxWidth:360 }}>
         {!confirmNew ? (
           <>
-            <label style={{ color:C.sub, fontSize:11, fontWeight:700, letterSpacing:2, display:"block", marginBottom:10 }}>ENTER YOUR NAME</label>
+            {/* Existing users */}
+            {users.length > 0 && (
+              <div style={{ marginBottom:20 }}>
+                <div style={{ color:C.sub, fontSize:11, fontWeight:700, letterSpacing:2, marginBottom:10 }}>בחר משתמש</div>
+                {users.map(u => (
+                  <button key={u} onClick={() => loginAs(u)} disabled={loginLoading}
+                    style={{
+                      width:"100%", background:C.card, border:`1.5px solid ${C.border}`,
+                      borderRadius:16, padding:"14px 18px", color:C.text,
+                      display:"flex", alignItems:"center", gap:14, cursor:"pointer",
+                      marginBottom:8, WebkitTapHighlightColor:"transparent",
+                      textAlign:"right", fontFamily:font,
+                    }}
+                    onTouchStart={e => e.currentTarget.style.background=C.surface}
+                    onTouchEnd={e => e.currentTarget.style.background=C.card}
+                  >
+                    <div style={{ background:C.surface, borderRadius:12, width:42, height:42, display:"flex", alignItems:"center", justifyContent:"center", fontSize:20, flexShrink:0 }}>
+                      👤
+                    </div>
+                    <div>
+                      <div style={{ fontWeight:700, fontSize:16 }}>{u}</div>
+                      <div style={{ color:C.sub, fontSize:11, marginTop:2 }}>לחץ להתחברות</div>
+                    </div>
+                    <div style={{ marginRight:"auto", color:C.muted, fontSize:18 }}>›</div>
+                  </button>
+                ))}
+                <div style={{ display:"flex", alignItems:"center", gap:10, margin:"16px 0" }}>
+                  <div style={{ flex:1, height:1, background:C.border }} />
+                  <span style={{ color:C.muted, fontSize:11 }}>או</span>
+                  <div style={{ flex:1, height:1, background:C.border }} />
+                </div>
+              </div>
+            )}
+
+            {/* New / manual name input */}
+            <div style={{ color:C.sub, fontSize:11, fontWeight:700, letterSpacing:2, marginBottom:10 }}>
+              {users.length > 0 ? "כניסה עם שם אחר" : "הכנס שם משתמש"}
+            </div>
             <div style={{ display:"flex", gap:10, marginBottom:12 }}>
               <Input value={nameInput} onChange={e=>{setNameInput(e.target.value);setLoginError("");}}
                 onKeyDown={e=>e.key==="Enter"&&!loginLoading&&submitName()}
-                placeholder="שם משתמש..." autoFocus style={{ flex:1 }} />
+                placeholder="הקלד שם..." autoFocus={users.length===0} style={{ flex:1 }} />
               <Btn label={loginLoading?"⟳":"→"} onClick={submitName} disabled={loginLoading||!nameInput.trim()} style={{ borderRadius:14, padding:"13px 18px" }} />
             </div>
             {loginError && <div style={{ color:C.red, fontSize:12, textAlign:"center" }}>⚠️ {loginError}</div>}
