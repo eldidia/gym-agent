@@ -4,15 +4,26 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#080810" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <title>GymAgent</title>
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
       body { background: #080810; font-family: 'Segoe UI', Tahoma, sans-serif; overscroll-behavior: none; }
-      input, button { font-family: inherit; }
+      /* Prevent iOS auto-zoom on input focus — requires font-size >= 16px */
+      input, button, select, textarea { font-size: 16px; font-family: inherit; }
+      /* Dynamic viewport height — updated by JS to exclude Safari address bar */
+      :root { --app-h: 100vh; }
     </style>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+    <script>
+      const setH = () => document.documentElement.style.setProperty('--app-h', window.innerHeight + 'px');
+      window.addEventListener('resize', setH);
+      setH();
+    </script>
   </body>
 </html>
