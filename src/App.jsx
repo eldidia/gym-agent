@@ -123,6 +123,8 @@ export default function App() {
   const refreshUsers = () =>
     sheetGet(SCRIPT_URL, { action: "getUsers" }).then(d => { if (d.ok) setUsers(d.users || []); }).catch(() => {});
 
+  const [loginError, setLoginError] = useState("");
+
   const login = async (name) => {
     setCurrentUser(name);
     try {
@@ -136,13 +138,16 @@ export default function App() {
     const name = newName.trim();
     if (!name) return;
     setAddingUser(true);
+    setLoginError("");
     try {
       await sheetPost(SCRIPT_URL, { action: "addUser", username: name });
       await refreshUsers();
-      setNewName("");
-      login(name);
-    } catch {}
+    } catch (err) {
+      setLoginError("לא ניתן להתחבר לשרת — ממשיכים במצב מקומי");
+    }
+    setNewName("");
     setAddingUser(false);
+    login(name);
   };
 
   const startWorkout = async () => {
@@ -246,6 +251,7 @@ export default function App() {
             {addingUser ? "⟳" : "+"}
           </Btn>
         </div>
+        {loginError && <div style={{ color: "#f4a261", fontSize: 12, marginTop: 8 }}>{loginError}</div>}
       </div>
     </div>
   );
